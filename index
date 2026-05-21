@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>定期考査β - Javaプログラミング実習②（オブジェクト指向）後半</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #1a1a1a;
+      background: #f0f2f5;
+    }
+    .site-header {
+      background: linear-gradient(135deg, #1b5e20, #2e7d32);
+      color: white;
+      padding: 16px 20px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .site-header h1 { font-size: 16px; font-weight: bold; }
+    .site-header p { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+    .progress-bar-wrap { background: #e0e0e0; height: 6px; }
+    .progress-bar {
+      height: 6px;
+      background: linear-gradient(90deg, #66bb6a, #2e7d32);
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+    .progress-info {
+      text-align: center; font-size: 12px; color: #555;
+      padding: 6px; background: #fff; border-bottom: 1px solid #ddd;
+    }
+    .container { max-width: 780px; margin: 0 auto; padding: 16px 12px 40px; }
+    .section-header {
+      background: linear-gradient(135deg, #2e7d32, #1b5e20);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin: 24px 0 12px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .q-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+    }
+    .q-header { padding: 12px 16px 8px; border-bottom: 1px solid #f0f0f0; }
+    .q-num {
+      display: inline-block;
+      background: #2e7d32;
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-bottom: 6px;
+    }
+    .q-text { font-size: 13px; line-height: 1.7; color: #222; }
+    .q-body { padding: 8px 16px 12px; }
+    .code-block {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      margin: 8px 0;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .inline-box {
+      display: inline-block;
+      border: 2px solid #66bb6a;
+      background: #e8f5e9;
+      color: #1b5e20;
+      min-width: 28px;
+      padding: 0 4px;
+      text-align: center;
+      border-radius: 4px;
+      font-weight: bold;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .choices { list-style: none; margin-top: 8px; }
+    .choice-item {
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 13px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .choice-item:hover { border-color: #a5d6a7; background: #f1f8e9; }
+    .choice-item:active { transform: scale(0.98); }
+    .choice-label {
+      display: inline-block;
+      background: #e8f5e9;
+      color: #2e7d32;
+      font-weight: bold;
+      font-size: 12px;
+      padding: 1px 7px;
+      border-radius: 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .choice-item.selected-correct { border-color: #43a047; background: #e8f5e9; }
+    .choice-item.selected-wrong   { border-color: #e53935; background: #ffebee; }
+    .choice-item.reveal-correct   { border-color: #43a047; background: #e8f5e9; }
+    .choice-item.disabled { cursor: default; pointer-events: none; }
+    .isa-table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+    .isa-table td { border: 1px solid #ccc; padding: 8px 12px; font-size: 13px; }
+    .isa-table th { border: 1px solid #ccc; padding: 8px 12px; background: #e8f5e9; font-size: 13px; }
+    .isa-input {
+      width: 60px; border: 2px solid #66bb6a; border-radius: 4px;
+      padding: 3px 6px; text-align: center; font-size: 13px;
+    }
+    .free-answer { margin-top: 10px; }
+    .free-answer textarea {
+      width: 100%; border: 2px solid #e0e0e0; border-radius: 8px;
+      padding: 10px; font-size: 13px; font-family: inherit;
+      resize: vertical; min-height: 60px; transition: border-color 0.2s;
+    }
+    .free-answer textarea:focus { outline: none; border-color: #66bb6a; }
+    .show-answer-btn {
+      margin-top: 8px;
+      background: #2e7d32;
+      color: white; border: none; border-radius: 8px;
+      padding: 10px 20px; font-size: 13px; cursor: pointer;
+      width: 100%; transition: background 0.2s;
+    }
+    .show-answer-btn:hover { background: #1b5e20; }
+    .explanation {
+      display: none; margin-top: 10px;
+      background: #fffde7; border: 1px solid #f9a825;
+      border-radius: 8px; padding: 12px 14px;
+      font-size: 13px; line-height: 1.8;
+      animation: fadeIn 0.3s ease;
+    }
+    .explanation.show { display: block; }
+    .explanation .exp-title {
+      font-weight: bold; color: #e65100; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .explanation .correct-answer {
+      background: #e8f5e9; border: 1px solid #66bb6a;
+      border-radius: 6px; padding: 6px 10px; margin-bottom: 8px;
+      font-weight: bold; color: #2e7d32; font-size: 13px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .two-col { display: flex; gap: 12px; flex-wrap: wrap; }
+    .two-col .col { flex: 1; min-width: 200px; }
+    .result-badge { display: none; text-align: center; margin-top: 6px; }
+    .badge-correct {
+      display: inline-block; background: #43a047; color: white;
+      border-radius: 20px; padding: 3px 14px; font-size: 12px; font-weight: bold;
+    }
+    .badge-wrong {
+      display: inline-block; background: #e53935; color: white;
+      border-radius: 20px; padding: 3px 14px; font-size: 12px; font-weight: bold;
+    }
+    .page-footer {
+      text-align: center; color: #888; font-size: 11px;
+      margin-top: 30px; padding-top: 12px; border-top: 1px solid #ddd;
+    }
+    .multi-confirm {
+      margin-top: 8px; background: #2e7d32; color: white;
+      border: none; border-radius: 8px; padding: 10px 20px;
+      font-size: 13px; cursor: pointer; width: 100%;
+    }
+    .multi-confirm:hover { background: #1b5e20; }
+  </style>
+</head>
+<body>
+
+<div class="site-header">
+  <h1>📗 定期考査β — Javaプログラミング実習②（オブジェクト指向）後半</h1>
+  <p>2306-01 ／ コレクション・例外処理・ポリモーフィズム・インターフェイス</p>
+</div>
+<div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+<div class="progress-info" id="progressInfo">0 / 20 問 回答済み</div>
+
+<div class="container">
+
+  <div class="section-header">問題 05：インターフェイスを使用することができる。</div>
+
+  <!-- 問01 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 01</span>
+      <div class="q-text">インターフェイスのメソッドに自動的に宣言されたことになっている修飾子をア〜オの中から答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <ul class="choices" data-correct="ア" data-qid="b1">
+        <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>public abstract</span></li>
+        <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>private abstract</span></li>
+        <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>public final</span></li>
+        <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>private final</span></li>
+        <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>protected abstract</span></li>
+      </ul>
+      <div class="result-badge" id="badgeb1"></div>
+      <div class="explanation" id="expb1">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：ア（public abstract）</div>
+        インターフェイスで宣言されたメソッドは、記述がなくても自動的に <code>public abstract</code> として扱われます。つまり外部から呼び出し可能で、かつ実装を持たない抽象メソッドです。インターフェイスに <code>private</code> や <code>protected</code> のメソッドは原則として宣言できません。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問02 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 02</span>
+      <div class="q-text">インターフェイスに関する記述について、最適な記述をア〜オの中から答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <ul class="choices" data-correct="オ" data-qid="b2">
+        <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>1つのクラスに1つだけインターフェイスをインポートすることができる。</span></li>
+        <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>1つのクラスに1つだけインターフェイスを実装することができる。</span></li>
+        <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>1つのクラスにインターフェイスを実装する場合も単一継承でのみ実装することができる。</span></li>
+        <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>1つのクラスに複数のインターフェイスをインポートすることができる。</span></li>
+        <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>1つのクラスに複数のインターフェイスを実装することができる。</span></li>
+      </ul>
+      <div class="result-badge" id="badgeb2"></div>
+      <div class="explanation" id="expb2">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：オ</div>
+        Javaではクラスの継承（<code>extends</code>）は単一継承のみですが、インターフェイスの実装（<code>implements</code>）は複数指定できます。例：<code>class Hero implements Fightable, Flyable</code>。「インポート」ではなく「実装（implements）」という点に注意しましょう。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問03 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 03</span>
+      <div class="q-text">インターフェイスのアクセス修飾子をア〜オの中から答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <ul class="choices" data-correct="イ" data-qid="b3">
+        <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>public と private のみ</span></li>
+        <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>public と package private のみ</span></li>
+        <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>private と package private のみ</span></li>
+        <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>public と protected のみ</span></li>
+        <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>protected と package private のみ</span></li>
+      </ul>
+      <div class="result-badge" id="badgeb3"></div>
+      <div class="explanation" id="expb3">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：イ（public と package private のみ）</div>
+        インターフェイス自体のアクセス修飾子は <code>public</code>（公開）または修飾子なし（package private、同じパッケージのみ）の2種類のみです。<code>private</code> や <code>protected</code> はインターフェイスのトップレベル宣言には使用できません。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問04 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 04</span>
+      <div class="q-text">Hero クラスに Runnable インターフェイスを実装する時の、クラス宣言部分の最適な記述をア〜オの中から答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <ul class="choices" data-correct="イ" data-qid="b4">
+        <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>public class Hero extends Runnable</span></li>
+        <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>public class Hero implements Runnable</span></li>
+        <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>public class Runnable extends Hero</span></li>
+        <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>public class Runnable implements Hero</span></li>
+        <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>public class Hero, Runnable</span></li>
+      </ul>
+      <div class="result-badge" id="badgeb4"></div>
+      <div class="explanation" id="expb4">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：イ</div>
+        インターフェイスを実装する場合は <code>implements</code> キーワードを使います。<code>extends</code> はクラスの継承に使うキーワードです。また、クラス名は <code>Hero</code>、実装するインターフェイス名は <code>Runnable</code> なので、「Hero implements Runnable」が正しい記述です。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問05 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 05</span>
+      <div class="q-text">下記の説明を読み、空欄①に当てはまるクラス宣言を記述しなさい。<br><br>
+      Hero クラスは Character クラスを継承し、Fightable インターフェイスと Flyable インターフェイスを実装する。</div>
+    </div>
+    <div class="q-body">
+      <div class="code-block">public class Hero <span class="inline-box">①</span> {
+    public void flying() {  }
+    public void fight() {  }
+}</div>
+      <div class="free-answer">
+        <textarea placeholder="①に当てはまるクラス宣言を入力…" rows="2"></textarea>
+        <button class="show-answer-btn" onclick="showFreeAnswer('expb5','b5')">答えを確認する</button>
+      </div>
+      <div class="explanation" id="expb5">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：extends Character implements Fightable, Flyable</div>
+        クラスの継承は <code>extends</code>、インターフェイスの実装は <code>implements</code> を使います。複数のインターフェイスを実装する場合はカンマ区切りで並べます。<br>
+        完全な宣言：<code>public class Hero extends Character implements Fightable, Flyable</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header">問題 06：オブジェクト概念（多態性など）を理解し、プログラミングを行うことができる。</div>
+
+  <!-- 問06 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 06</span>
+      <div class="q-text">Is-a の関係に従い、正しい関係には「○」を、誤った関係には「×」を記述しなさい。</div>
+    </div>
+    <div class="q-body">
+      <table class="isa-table">
+        <tr>
+          <th>関係</th>
+          <th>○ / ×</th>
+        </tr>
+        <tr><td>ア．電話クラスを継承し、携帯電話クラスを宣言する。</td><td><input class="isa-input" type="text" placeholder="○/×"></td></tr>
+        <tr><td>イ．東京駅クラスを継承し、大阪駅クラスを宣言する。</td><td><input class="isa-input" type="text" placeholder="○/×"></td></tr>
+        <tr><td>ウ．社員クラスを継承し、管理職クラスを宣言する。</td><td><input class="isa-input" type="text" placeholder="○/×"></td></tr>
+        <tr><td>エ．領収書クラスを継承し、書類クラスを宣言する。</td><td><input class="isa-input" type="text" placeholder="○/×"></td></tr>
+        <tr><td>オ．商品クラスを継承し、価格クラスを宣言する。</td><td><input class="isa-input" type="text" placeholder="○/×"></td></tr>
+      </table>
+      <button class="show-answer-btn" onclick="showFreeAnswer('expb6','b6')" style="margin-top:8px;">答えを確認する</button>
+      <div class="explanation" id="expb6">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：ア○　イ×　ウ○　エ×　オ×</div>
+        Is-a の関係とは「AはBの一種である」が成り立つかどうかです。<br>
+        ア：「携帯電話は電話の一種」→ ○<br>
+        イ：「大阪駅は東京駅の一種」とは言えない → ×（同じ種類であり、継承関係ではない）<br>
+        ウ：「管理職は社員の一種」→ ○<br>
+        エ：「書類は領収書の一種」とは言えない → ×（逆の関係）<br>
+        オ：「価格は商品の一種」とは言えない → ×
+      </div>
+    </div>
+  </div>
+
+  <!-- 問07 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 07</span>
+      <div class="q-text">ダウンキャストについて下記に対する、最適な記述をア〜オの中から答えなさい。<br><br>
+      Hero クラスを継承し、SuperHero クラスを宣言する。なお、「Hero hero = new SuperHero() ;」で SuperHero オブジェクトを生成していることとする。</div>
+    </div>
+    <div class="q-body">
+      <ul class="choices" data-correct="ウ" data-qid="b7">
+        <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>Hero sh = (Object) hero ;</span></li>
+        <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>Hero sh = (Hero) hero ;</span></li>
+        <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>SuperHero sh = (SuperHero) hero ;</span></li>
+        <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>SuperHero sh = (Hero) hero ;</span></li>
+        <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>Hero sh = (SuperHero) hero ;</span></li>
+      </ul>
+      <div class="result-badge" id="badgeb7"></div>
+      <div class="explanation" id="expb7">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：ウ</div>
+        ダウンキャストとは、親クラス型の変数に格納されたオブジェクトを、子クラス型に変換することです。<br>
+        <code>hero</code> は <code>Hero</code> 型で宣言されていますが、実体は <code>SuperHero</code> オブジェクトです。これを <code>SuperHero</code> 型として扱うために <code>(SuperHero) hero</code> とキャストします。<br>
+        ア：Object型にキャストしており、これはアップキャスト。<br>
+        イ：変数型と結果型が同じ Hero 型で、ダウンキャストではない。<br>
+        エ：<code>(Hero)</code> にキャストしているが、変数が <code>SuperHero</code> 型なので不一致。<br>
+        オ：<code>(SuperHero)</code> にキャストしているが、代入先が <code>Hero</code> 型なので不一致。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問08 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 08</span>
+      <div class="q-text">下記のプログラムを実行した時の結果を、ア〜オの中から答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <div class="two-col">
+        <div class="col">
+          <div class="code-block">public class Parent {  }
+
+public class Child extends Parent {  }
+
+public class Main {
+    public static void main(String[] args) {
+        Parent p1 = new Parent() ;
+        Parent p2 = new Child() ;
+        System.out.print(p1 instanceof Child) ;
+        System.out.print(", ") ;
+        System.out.print(p2 instanceof Child) ;
+    }
+}</div>
+        </div>
+        <div class="col">
+          <ul class="choices" data-correct="イ" data-qid="b8">
+            <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>false, false</span></li>
+            <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>false, true</span></li>
+            <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>true, false</span></li>
+            <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>true, true</span></li>
+            <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>何も表示されない</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="result-badge" id="badgeb8"></div>
+      <div class="explanation" id="expb8">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：イ（false, true）</div>
+        <code>instanceof</code> 演算子は「オブジェクトが指定したクラス（またはそのサブクラス）のインスタンスかどうか」を判定します。<br>
+        <code>p1</code> は <code>new Parent()</code> なので Child のインスタンスではない → <code>false</code><br>
+        <code>p2</code> は <code>new Child()</code> なので Child のインスタンスである → <code>true</code><br>
+        よって出力は <code>false, true</code> です。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問09 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 09</span>
+      <div class="q-text">次頁のプログラムを実行した時に、「マネージャー」と表示されるように空欄①に当てはまるコードをア〜オの中からすべて答えなさい（完答）。</div>
+    </div>
+    <div class="q-body">
+      <div class="two-col">
+        <div class="col">
+          <div class="code-block">public class Staff {
+    public void show() {
+        System.out.println("スタッフ") ;
+    }
+}</div>
+        </div>
+        <div class="col">
+          <div class="code-block">public class Manager extends Staff {
+    public void show() {
+        System.out.println("マネージャー") ;
+    }
+}</div>
+        </div>
+      </div>
+      <div class="code-block">public class Main {
+    public static void main(String[] args) {
+        <span class="inline-box">①</span>
+        staff.show() ;
+    }
+}</div>
+      <ul class="choices" data-correct="イエ" data-qid="b9" data-multi="true">
+        <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>Staff staff = new Staff() ;</span></li>
+        <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>Staff staff = new Manager() ;</span></li>
+        <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>Manager staff = new Staff() ;</span></li>
+        <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>Manager staff = new Manager() ;</span></li>
+        <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>Object staff = new Manager() ;</span></li>
+      </ul>
+      <div class="result-badge" id="badgeb9"></div>
+      <div class="explanation" id="expb9">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：イ・エ</div>
+        「マネージャー」を表示するには <code>show()</code> が <code>Manager</code> クラスのメソッドとして呼ばれる必要があります。<br>
+        ア：<code>Staff</code> のインスタンスなので「スタッフ」が表示される → ×<br>
+        イ：<code>Staff</code> 型だが実体は <code>Manager</code> → ポリモーフィズムにより「マネージャー」 → ○<br>
+        ウ：<code>new Staff()</code> を <code>Manager</code> 型に代入できない → コンパイルエラー → ×<br>
+        エ：<code>Manager</code> のインスタンスなので「マネージャー」 → ○<br>
+        オ：<code>Object</code> 型には <code>show()</code> メソッドがないためコンパイルエラー → ×
+      </div>
+    </div>
+  </div>
+
+  <!-- 問10 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 10</span>
+      <div class="q-text">下記のプログラムの空欄②〜⑤に当てはまるコードを記述しなさい。<br>コンソールへの出力結果：にゃあ〜 / ワンワン</div>
+    </div>
+    <div class="q-body">
+      <div class="code-block">public abstract class Animal {
+    public String name ;    public int age ;
+    public void showProfile() {
+        System.out.println("名前は、" + name + "、" + age + "歳です。") ;
+    }
+    public <span class="inline-box">②</span> void cry() ;
+}</div>
+      <div class="two-col">
+        <div class="col">
+          <div class="code-block">public class Cat extends Animal {
+    public void cry() {
+        <span class="inline-box">③</span> ("にゃあ〜") ;
+    }
+}</div>
+        </div>
+        <div class="col">
+          <div class="code-block">public class Dog extends Animal {
+    public void cry() {
+        <span class="inline-box">③</span> ("ワンワン") ;
+    }
+}</div>
+        </div>
+      </div>
+      <div class="code-block">public class Main {
+    public static void main(String[] args) {
+        Cat cat = <span class="inline-box">④</span> Cat() ;
+        cat.name = "タマ" ;    cat.age = 3 ;
+        Dog dog = <span class="inline-box">④</span> Dog() ;
+        dog.name = "ポチ" ;    dog.age = 5 ;
+        Animal[] animals = new Animal[ 2 ] ;
+        animals[0] = cat ;    animals[1] = dog ;
+        for (Animal animal : animals) {
+            <span class="inline-box">⑤</span> ;
+        }
+    }
+}</div>
+      <div class="free-answer">
+        <textarea placeholder="②〜⑤の答えをそれぞれ入力…" rows="4"></textarea>
+        <button class="show-answer-btn" onclick="showFreeAnswer('expb10','b10')">答えを確認する</button>
+      </div>
+      <div class="explanation" id="expb10">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：②abstract　③System.out.println　④new　⑤animal.cry()</div>
+        ② <code>abstract</code>：抽象メソッドの宣言に必要。<br>
+        ③ <code>System.out.println</code>：文字列を出力するメソッド。<br>
+        ④ <code>new</code>：インスタンス生成キーワード。<br>
+        ⑤ <code>animal.cry()</code>：ポリモーフィズムにより、animal が Cat なら「にゃあ〜」、Dog なら「ワンワン」が表示されます。
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header">問題 07：コレクションクラスを使用することができる。</div>
+
+  <!-- 問11 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 11</span>
+      <div class="q-text">コレクションに関する記述について、最適な記述をア〜オの中から答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <ul class="choices" data-correct="ア" data-qid="b11">
+        <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>List は格納した順番があり、格納した順番で値を取り出せる。</span></li>
+        <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>List は格納した順番は当てにならず、値を取り出してみないとわからない。</span></li>
+        <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>Set は同じ値を重複して格納することができる。</span></li>
+        <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>Set は必ず格納した順番で取り出せる。</span></li>
+        <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>Map はキーと値のペアで格納し、値で検索できる。</span></li>
+      </ul>
+      <div class="result-badge" id="badgeb11"></div>
+      <div class="explanation" id="expb11">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：ア</div>
+        コレクションの特徴：<br>
+        <strong>List</strong>：順番あり・重複あり。格納した順番で取り出せる。<br>
+        <strong>Set</strong>：順番なし（保証なし）・重複なし。<br>
+        <strong>Map</strong>：キーと値のペアで格納。キーで検索する（値ではない）。<br>
+        イ：List は順番が保証されているので誤り。ウ：Set は重複不可。エ：Set は順番保証なし。オ：Map は「キー」で検索する。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問12 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 12</span>
+      <div class="q-text">下記のプログラムで Hero クラスのインスタンスをコレクションに格納する時、空欄①に当てはまるコードをア〜オの中から答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <div class="code-block">public class Main {
+    public static void main(String[] args) {
+        List&lt;Hero&gt; heros = new ArrayList&lt;&gt;() ;
+        heros.<span class="inline-box">①</span>(new Hero()) ;
+    }
+}</div>
+      <ul class="choices" data-correct="オ" data-qid="b12">
+        <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>up</span></li>
+        <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>set</span></li>
+        <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>get</span></li>
+        <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>put</span></li>
+        <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>add</span></li>
+      </ul>
+      <div class="result-badge" id="badgeb12"></div>
+      <div class="explanation" id="expb12">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：オ（add）</div>
+        List（ArrayList）に要素を追加するメソッドは <code>add()</code> です。<br>
+        <code>get()</code>：要素の取得。<code>set()</code>：指定インデックスの要素を置き換える。<code>put()</code>：Map で使うメソッド。<code>up</code>：そのようなメソッドは存在しない。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問13 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 13</span>
+      <div class="q-text">コレクションのインスタンスを生成する際に、下記のような「&lt;データ型&gt;」の部分の呼び名を記述しなさい。<br><br>
+      <code style="background:#f5f5f5; padding:4px 8px; border-radius:4px;">List&lt;String&gt; data = new ArrayList&lt;String&gt;() ;</code></div>
+    </div>
+    <div class="q-body">
+      <div class="free-answer">
+        <textarea placeholder="呼び名を入力…" rows="1"></textarea>
+        <button class="show-answer-btn" onclick="showFreeAnswer('expb13','b13')">答えを確認する</button>
+      </div>
+      <div class="explanation" id="expb13">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：型パラメータ（ジェネリクス）</div>
+        <code>&lt;String&gt;</code> のような <code>&lt;データ型&gt;</code> の部分を「<strong>型パラメータ</strong>」と呼びます。この仕組みを「<strong>ジェネリクス（Generics）</strong>」といい、コレクションに格納できる型を指定することでコンパイル時に型の安全性を確保できます。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問14 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 14</span>
+      <div class="q-text">ラッパークラスを1つ答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <div class="free-answer">
+        <textarea placeholder="ラッパークラスを1つ入力…" rows="1"></textarea>
+        <button class="show-answer-btn" onclick="showFreeAnswer('expb14','b14')">答えを確認する</button>
+      </div>
+      <div class="explanation" id="expb14">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解例：Integer / Double / Boolean / Character / Long など</div>
+        ラッパークラスとは、プリミティブ型（基本データ型）をオブジェクトとして扱うためのクラスです。コレクションにはオブジェクトしか格納できないため、ラッパークラスを使ってプリミティブ型をオブジェクト化します。<br>
+        例：<code>int</code> → <code>Integer</code>、<code>double</code> → <code>Double</code>、<code>boolean</code> → <code>Boolean</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- 問15 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 15</span>
+      <div class="q-text">問 10 の main メソッドの Animal 型配列を ArrayList に変更する時、鳴き声表示の拡張 for 文の部分をどのように対応すべきか、答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <div class="free-answer">
+        <textarea placeholder="拡張for文の変更内容を入力…" rows="3"></textarea>
+        <button class="show-answer-btn" onclick="showFreeAnswer('expb15','b15')">答えを確認する</button>
+      </div>
+      <div class="explanation" id="expb15">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：変更不要（for (Animal animal : animals) { animal.cry() ; } のまま）</div>
+        配列を <code>ArrayList&lt;Animal&gt;</code> に変更しても、拡張 for 文の記述は同じです。<br>
+        変更前：<code>Animal[] animals = new Animal[2] ;</code><br>
+        変更後：<code>List&lt;Animal&gt; animals = new ArrayList&lt;&gt;() ;</code><br>
+        <code>animals.add(cat) ; animals.add(dog) ;</code> で要素を追加し、拡張 for 文は <code>for (Animal animal : animals)</code> のまま使用できます。
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header">問題 08：例外処理ができる。</div>
+
+  <!-- 問16 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 16</span>
+      <div class="q-text">プログラムの不具合について、最適な記述をア〜オの中から答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <ul class="choices" data-correct="エ" data-qid="b16">
+        <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>文法エラーは言語仕様と異なる記述に対して発生するが、コンパイルにより自動的に修正される。</span></li>
+        <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>論理エラーは処理内容に関りがあると発生するが、インタプリタにより自動的に修正される。</span></li>
+        <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>実行時エラーは動作テストで発生が予防できるため、動作テストをしっかり行う必要がある。</span></li>
+        <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>文法エラーと論理エラーは開発者の過失であり、実行時エラーは想定外の事態により発生する。</span></li>
+        <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>文法エラーと実行時エラーは言語仕様に合っていないコードがあるために発生する。</span></li>
+      </ul>
+      <div class="result-badge" id="badgeb16"></div>
+      <div class="explanation" id="expb16">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：エ</div>
+        <strong>文法エラー</strong>：言語仕様に合わない記述。コンパイル時に検出される（自動修正はされない）。<br>
+        <strong>論理エラー</strong>：プログラムは動くが、処理の内容が誤っている。開発者が気づいて修正する必要がある。<br>
+        <strong>実行時エラー</strong>：ファイルが見つからない・ネットワーク断絶など、実行中に想定外の事態で発生する。例外処理で対応する。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問17 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 17</span>
+      <div class="q-text">例外の種類に関する記述の組み合わせで、最適な記述をア〜オの中から答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <ul class="choices" data-correct="ア" data-qid="b17">
+        <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>Exception 系例外：回復の見込みがある、catch すべき例外。<br>RuntimeException 系例外：回復の見込みは必須ではなく、catch しなくても例外。</span></li>
+        <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>Exception 系例外：回復の見込みはあるが、catch すべきではない例外。<br>RuntimeException 系例外：回復は必須ではなく、catch しなくてもよい例外。</span></li>
+        <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>Exception 系例外：回復の見込みがある、catch すべき例外。<br>RuntimeException 系例外：回復は必須ではないが、catch すべき例外。</span></li>
+        <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>Exception 系例外：回復の見込みはあるが、catch すべきではない例外。<br>RuntimeException 系例外：回復が必須ではないが、catch すべき例外。</span></li>
+        <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>Exception 系例外：回復の見込みがある、catch すべき例外。<br>RuntimeException 系例外：回復は必須であるが、catch できない例外。</span></li>
+      </ul>
+      <div class="result-badge" id="badgeb17"></div>
+      <div class="explanation" id="expb17">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：ア</div>
+        <strong>Exception 系（検査例外）</strong>：コンパイラが catch または throws を強制する。回復の見込みがある例外（例：IOException）。<br>
+        <strong>RuntimeException 系（非検査例外）</strong>：catch しなくてもコンパイルエラーにならない。主にプログラムのバグに起因する（例：NullPointerException、ArrayIndexOutOfBoundsException）。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問18 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 18</span>
+      <div class="q-text">下記のプログラムの空欄①〜⑤に当てはまるコードを記述しなさい。</div>
+    </div>
+    <div class="q-body">
+      <div class="code-block">public class Main {
+    public static void main(String[] args) {
+        FileWriter fw = null ;
+        <span class="inline-box">①</span> {
+            fw = new FileWriter("data.txt") ;
+            fw.write("Hello topia!") ;
+        } <span class="inline-box">②</span> (IOException e) {
+            System.out.println("ファイルを開くことができません") ;
+        } <span class="inline-box">③</span> {
+            <span class="inline-box">④</span> {
+                if(fw != null) {
+                    fw.close() ;
+                }
+            } <span class="inline-box">⑤</span> (IOException e) {
+                System.out.println("ファイルを閉じることができません") ;
+            }
+        }
+    }
+}</div>
+      <div class="free-answer">
+        <textarea placeholder="①〜⑤の答えをそれぞれ入力…" rows="3"></textarea>
+        <button class="show-answer-btn" onclick="showFreeAnswer('expb18','b18')">答えを確認する</button>
+      </div>
+      <div class="explanation" id="expb18">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：①try　②catch　③finally　④try　⑤catch</div>
+        ① <code>try</code>：例外が発生する可能性のある処理を囲む。<br>
+        ② <code>catch</code>：例外が発生した時の処理。<br>
+        ③ <code>finally</code>：例外の有無に関わらず必ず実行される処理。<br>
+        ④ <code>try</code>：finally ブロック内でも close() に例外が発生する可能性があるため再度 try。<br>
+        ⑤ <code>catch</code>：close() の例外をキャッチする。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問19 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 19</span>
+      <div class="q-text">下記のプログラムは、上記の問 18 のプログラムに対して、Java 仮想マシンによって自動的に close メソッドが呼び出されるプログラムである。上記の問 18 のプログラムを参照して、下記の空欄①に当てはまるコードを記述しなさい。</div>
+    </div>
+    <div class="q-body">
+      <div class="code-block">public class Main {
+    public static void main(String[] args) {
+        try ( <span class="inline-box">①</span> ) {
+            fw.write("Hello topia!") ;
+        } catch (IOException e) {
+            System.out.println("ファイルを開くことができません") ;
+        }
+    }
+}</div>
+      <div class="free-answer">
+        <textarea placeholder="①に当てはまるコードを入力…" rows="2"></textarea>
+        <button class="show-answer-btn" onclick="showFreeAnswer('expb19','b19')">答えを確認する</button>
+      </div>
+      <div class="explanation" id="expb19">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：FileWriter fw = new FileWriter("data.txt")</div>
+        これは「<strong>try-with-resources</strong>」構文です。<code>try()</code> の括弧内でリソースを宣言・初期化すると、try ブロックの終了時に JVM が自動的に <code>close()</code> を呼び出してくれます。finally ブロックで手動 close する必要がなくなります。
+      </div>
+    </div>
+  </div>
+
+  <!-- 問20 -->
+  <div class="q-card">
+    <div class="q-header">
+      <span class="q-num">問 20</span>
+      <div class="q-text">例外の対処方法について、最も適切な記述をア〜オの中から答えなさい。</div>
+    </div>
+    <div class="q-body">
+      <ul class="choices" data-correct="イ" data-qid="b20">
+        <li class="choice-item" data-val="ア"><span class="choice-label">ア</span><span>メソッド宣言に発生する可能性のある例外を throw で宣言すると try-catch 文が不要になり、メソッドの呼び出し元に例外処理を委ねることができる。また、Java 仮想マシンに throws を使用した処理文を記述することで例外インスタンスを渡すことができ、プログラム側から例外的状況を伝えることができる。</span></li>
+        <li class="choice-item" data-val="イ"><span class="choice-label">イ</span><span>メソッド宣言に発生する可能性のある例外を throws で宣言すると try-catch 文が不要になり、メソッドの呼び出し元に例外処理を委ねることができる。また、Java 仮想マシンに throw を使用した処理文を記述することで例外インスタンスを渡すことができ、プログラム側から例外的状況を伝えることができる。</span></li>
+        <li class="choice-item" data-val="ウ"><span class="choice-label">ウ</span><span>API に多くの例外クラスが用意されているため、開発者自身で独自の例外クラスを宣言する余地はない。</span></li>
+        <li class="choice-item" data-val="エ"><span class="choice-label">エ</span><span>API に多くの例外クラスが用意されており、継承階層を構成している。しかし、主要な例外クラスには final が付けられているため、開発者自身が既存の例外クラスを継承して独自の例外クラスを宣言する機会はほとんどない。</span></li>
+        <li class="choice-item" data-val="オ"><span class="choice-label">オ</span><span>大規模なプログラム開発では、さまざまな例外的状況を思い浮かべ、独自の例外クラスを宣言することで、実行時エラーに対して共通の対処が可能になる。</span></li>
+      </ul>
+      <div class="result-badge" id="badgeb20"></div>
+      <div class="explanation" id="expb20">
+        <div class="exp-title">💡 解説</div>
+        <div class="correct-answer">✅ 正解：イ</div>
+        <strong>throws</strong>（複数形）：メソッド宣言に付けて「このメソッドは〇〇例外を投げる可能性がある」と呼び出し元に伝える。<br>
+        <strong>throw</strong>（単数形）：実際に例外インスタンスを投げる（発生させる）キーワード。<br>
+        アは throw と throws が逆になっているため誤り。ウは独自の例外クラスは宣言できるので誤り。エは主要な例外クラスが final で継承できないという記述が誤り。
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    @N とびあ IT スクール　製作・著作：株式会社 個別教育研究所<br>
+    2306-01 ／ Javaプログラミング実習②（オブジェクト指向）後半
+  </div>
+
+</div>
+
+<script>
+  let answered = new Set();
+  const TOTAL = 20;
+
+  function updateProgress() {
+    const count = answered.size;
+    document.getElementById('progressBar').style.width = (count / TOTAL * 100) + '%';
+    document.getElementById('progressInfo').textContent = count + ' / ' + TOTAL + ' 問 回答済み';
+  }
+
+  document.querySelectorAll('.choices:not([data-multi])').forEach(function(ul) {
+    ul.addEventListener('click', function(e) {
+      const item = e.target.closest('.choice-item');
+      if (!item || ul.classList.contains('locked')) return;
+      ul.classList.add('locked');
+      const correct = ul.dataset.correct;
+      const qid = ul.dataset.qid;
+      const selected = item.dataset.val;
+      ul.querySelectorAll('.choice-item').forEach(function(ci) {
+        ci.classList.add('disabled');
+        if (ci.dataset.val === correct) ci.classList.add('reveal-correct');
+      });
+      if (selected === correct) {
+        item.classList.add('selected-correct');
+      } else {
+        item.classList.add('selected-wrong');
+      }
+      const badge = document.getElementById('badge' + qid);
+      if (badge) {
+        badge.style.display = 'block';
+        badge.innerHTML = selected === correct
+          ? '<span class="badge-correct">⭕ 正解！</span>'
+          : '<span class="badge-wrong">✕ 不正解</span>';
+      }
+      const exp = document.getElementById('exp' + qid);
+      if (exp) {
+        exp.classList.add('show');
+        setTimeout(function() { exp.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 200);
+      }
+      answered.add('q' + qid);
+      updateProgress();
+    });
+  });
+
+  document.querySelectorAll('.choices[data-multi]').forEach(function(ul) {
+    let selectedSet = new Set();
+    ul.addEventListener('click', function(e) {
+      const item = e.target.closest('.choice-item');
+      if (!item || ul.classList.contains('locked')) return;
+      const val = item.dataset.val;
+      if (selectedSet.has(val)) {
+        selectedSet.delete(val);
+        item.style.borderColor = '';
+        item.style.background = '';
+      } else {
+        selectedSet.add(val);
+        item.style.borderColor = '#2e7d32';
+        item.style.background = '#e8f5e9';
+      }
+      if (!ul.nextElementSibling || !ul.nextElementSibling.classList.contains('multi-confirm')) {
+        const btn = document.createElement('button');
+        btn.className = 'multi-confirm';
+        btn.textContent = '選択を確定する';
+        btn.onclick = function() {
+          ul.classList.add('locked');
+          const correctSet = new Set(ul.dataset.correct.split(''));
+          const qid = ul.dataset.qid;
+          let isCorrect = selectedSet.size === correctSet.size &&
+            [...selectedSet].every(v => correctSet.has(v));
+          ul.querySelectorAll('.choice-item').forEach(function(ci) {
+            ci.classList.add('disabled');
+            ci.style.borderColor = '';
+            ci.style.background = '';
+            if (correctSet.has(ci.dataset.val)) ci.classList.add('reveal-correct');
+            if (selectedSet.has(ci.dataset.val) && !correctSet.has(ci.dataset.val)) ci.classList.add('selected-wrong');
+          });
+          const badge = document.getElementById('badge' + qid);
+          if (badge) {
+            badge.style.display = 'block';
+            badge.innerHTML = isCorrect
+              ? '<span class="badge-correct">⭕ 正解！</span>'
+              : '<span class="badge-wrong">✕ 不正解</span>';
+          }
+          const exp = document.getElementById('exp' + qid);
+          if (exp) {
+            exp.classList.add('show');
+            setTimeout(function() { exp.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 200);
+          }
+          answered.add('q' + qid);
+          updateProgress();
+          btn.remove();
+        };
+        ul.parentNode.insertBefore(btn, ul.nextSibling);
+      }
+    });
+  });
+
+  function showFreeAnswer(expId, qid) {
+    const exp = document.getElementById(expId);
+    if (exp) {
+      exp.classList.add('show');
+      setTimeout(function() { exp.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 100);
+    }
+    answered.add('q' + qid);
+    updateProgress();
+  }
+
+  updateProgress();
+</script>
+</body>
+</html>
